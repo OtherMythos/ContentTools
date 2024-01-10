@@ -1,0 +1,8 @@
+build/
+buildIos/
+doxy/
+.DS_STORE
+buildNoTools
+Dependencies
+.vscode
+compile_commands.json
