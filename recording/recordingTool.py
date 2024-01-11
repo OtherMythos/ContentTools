@@ -7,6 +7,7 @@ import os
 import signal
 import sys
 import time
+from datetime import datetime
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
@@ -26,18 +27,53 @@ def openAudioRecording(outPath):
     soxCommand = """rec %s""" % outPath
     return subprocess.Popen(soxCommand, shell=True)
 
-def prepareOutputDirectory(outDir):
-    names = ["camera", "desktop", "audio"]
-    endings = [".mov", ".mov", ".mp3"]
+def getFileNames():
+    return ["camera", "desktop", "audio"]
+def getFileEndings():
+    return [".mov", ".mov", ".mp3"]
+def getOutDirNames(outDir):
+    names = getFileNames()
+    endings = getFileEndings()
     outPaths = []
     for i in range(len(names)):
         targetPath = outDir / (Path(names[i] + "-current").with_suffix(endings[i]))
-        if(targetPath.exists()):
-            print("Path '%s' already exists" % str(targetPath))
-            sys.exit(1)
         outPaths.append(targetPath)
-
     return outPaths
+def getOutDirCommitNames(outDir):
+    names = getFileNames()
+    endings = getFileEndings()
+    outPaths = []
+    dateTime = datetime.now()
+    for i in range(len(names)):
+        targetPath = outDir / (names[i] + "-" + dateTime.strftime("%Y-%m-%d-%H-%M-%S") + endings[i])
+        outPaths.append(targetPath)
+    return outPaths
+
+def prepareOutputDirectory(outDir):
+    outPaths = []
+    paths = getOutDirNames(outDir)
+    for i in paths:
+        if(i.exists()):
+            print("Path '%s' already exists" % str(i))
+            sys.exit(1)
+        outPaths.append(i)
+    return outPaths
+
+def commitOutputDirectory(outDir):
+    paths = getOutDirNames(outDir)
+    for i in paths:
+        if(not i.exists()):
+            print("Missing path '%s' in the output directory" % str(i))
+            sys.exit(1)
+    commitPaths = getOutDirCommitNames(outDir)
+    for i in commitPaths:
+        if(i.exists()):
+            print("Commit path name '%s' already exists." % str(i))
+            sys.exit(1)
+
+    for i in range(len(paths)):
+        print("Renaming file '%s' to '%s'" % (paths[i], commitPaths[i]))
+        paths[i].rename(commitPaths[i])
 
 def main():
     helpText = '''A tool to help automate recording of camera and desktop setups for YouTube videos.'''
@@ -45,6 +81,7 @@ def main():
     parser = argparse.ArgumentParser(description = helpText)
 
     parser.add_argument('outputDirectory', metavar='I', type=str, nargs='?', help='Path to the directory to write the video to')
+    parser.add_argument('--commit', help="Commit the current batch of videos to allow for another recording", action='store_true')
 
     args = parser.parse_args()
 
@@ -75,6 +112,10 @@ def main():
         print("Output path does not exist", file=sys.stderr)
     if not outPath.is_dir():
         print("Output path is not a directory", file=sys.stderr)
+
+    if(args.commit):
+        commitOutputDirectory(outPath)
+        return
 
     outPaths = prepareOutputDirectory(outPath)
 
