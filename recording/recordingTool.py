@@ -40,15 +40,24 @@ def getOutDirNames(outDir):
         targetPath = outDir / (Path(names[i] + "-current").with_suffix(endings[i]))
         outPaths.append(targetPath)
     return outPaths
+def getDateTimestamp():
+    dateTime = datetime.now()
+    return dateTime.strftime("%Y-%m-%d-%H-%M-%S")
 def getOutDirCommitNames(outDir):
     names = getFileNames()
     endings = getFileEndings()
     outPaths = []
-    dateTime = datetime.now()
     for i in range(len(names)):
-        targetPath = outDir / (names[i] + "-" + dateTime.strftime("%Y-%m-%d-%H-%M-%S") + endings[i])
+        targetPath = outDir / (names[i] + "-" + getDateTimestamp() + endings[i])
         outPaths.append(targetPath)
     return outPaths
+
+def prepareAudioDirectory(outDir):
+    targetPath = outDir / ("audioRecording-" + getDateTimestamp() + ".mp3")
+    if targetPath.exists():
+        if targetPath.is_file():
+            targetPath.unlink()
+    return targetPath
 
 def prepareOutputDirectory(outDir):
     outPaths = []
@@ -83,6 +92,7 @@ def main():
 
     parser.add_argument('outputDirectory', metavar='I', type=str, nargs='?', help='Path to the directory to write the video to')
     parser.add_argument('--commit', help="Commit the current batch of videos to allow for another recording", action='store_true')
+    parser.add_argument('--audio', help="Record only the audio input", action='store_true')
 
     args = parser.parse_args()
 
@@ -90,23 +100,6 @@ def main():
     if(targetPath is None):
         print("Please provide an output directory")
         return
-
-    #devnull = open(os.devnull, 'w')
-    #command = """ffmpeg -framerate 30.0 -f avfoundation -i Canon -video_size 1920x1080 -r 30 -filter_complex split=2[out1][out2] -map [out1] -y test1.mov -map [out2] -s 1280x720 -f avi pipe:"""
-    #ffplayCommand = """ffplay -vf -fflags nobuffer -flags low_delay pipe:"""
-    ##command = """ffmpeg -f avfoundation -list_devices true -i \"\" """
-    #print(command.split())
-    #process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, cwd=str(targetPath))
-    #p2 = subprocess.Popen(ffplayCommand.split(), stdin=process.stdout)
-    #process.stdout.close()
-
-    ##process.wait()
-
-    #signal.signal(signal.SIGINT, signal_handler)
-    #print('Press Ctrl+C')
-    #signal.pause()
-
-    #devnull.close()
 
     outPath = Path(targetPath)
     if not outPath.exists():
@@ -118,14 +111,21 @@ def main():
         commitOutputDirectory(outPath)
         return
 
-    outPaths = prepareOutputDirectory(outPath)
-
     width = 1920/2
-    processes = [
-        openWebcamRecording("Canon", outPaths[0], width, 0, 0),
-        openWebcamRecording("Elgato", outPaths[1], width, width, 0),
-        openAudioRecording(outPaths[2])
-    ]
+
+    processes = []
+    if(args.audio):
+        outPath = prepareAudioDirectory(outPath)
+        processes = [
+            openAudioRecording(outPath)
+        ]
+    else:
+        outPaths = prepareOutputDirectory(outPath)
+        processes = [
+            openWebcamRecording("Canon", outPaths[0], width, 0, 0),
+            openWebcamRecording("Elgato", outPaths[1], width, width, 0),
+            openAudioRecording(outPaths[2])
+        ]
 
     signal.signal(signal.SIGINT, signal_handler)
     #while p1.poll() is None and p2.poll() is None:
