@@ -69,6 +69,13 @@ def prepareOutputDirectory(outDir):
         outPaths.append(i)
     return outPaths
 
+def clearNonComitted(outPath):
+    paths = getOutDirNames(outPath)
+    for i in paths:
+        if i.exists() and i.is_file():
+            print("Removing file %s" % i)
+            i.unlink()
+
 def commitOutputDirectory(outDir):
     paths = getOutDirNames(outDir)
     for i in paths:
@@ -93,6 +100,7 @@ def main():
     parser.add_argument('outputDirectory', metavar='I', type=str, nargs='?', help='Path to the directory to write the video to')
     parser.add_argument('--commit', help="Commit the current batch of videos to allow for another recording", action='store_true')
     parser.add_argument('--audio', help="Record only the audio input", action='store_true')
+    parser.add_argument('--clear', help="Clear the non-committed files ready for a new recording", action='store_true')
 
     args = parser.parse_args()
 
@@ -109,6 +117,9 @@ def main():
 
     if(args.commit):
         commitOutputDirectory(outPath)
+        return
+    if(args.clear):
+        clearNonComitted(outPath)
         return
 
     width = 1920/2
