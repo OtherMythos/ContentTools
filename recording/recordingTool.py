@@ -16,7 +16,8 @@ def signal_handler(sig, frame):
 def openWebcamRecording(deviceName, outPath, width, left, top):
     #NOTE I think the video is being encoded twice with this technique, once for the viewer and another for the save
     ffmpegCommand = """ffmpeg -framerate 30.0 -f avfoundation -i "%s" """ % deviceName
-    ffmpegCommand += """-video_size 1920x1080 -r 30 -filter_complex 'split=2[out1][out2]' -map '[out1]' -y %s -map '[out2]' -s 1280x720 -f avi pipe:""" % outPath
+    #ffmpegCommand = """ffmpeg -framerate 30.0 -f avfoundation -i "%s" -video_size 1920x1080 -r 30 -c:v h264_videotoolbox %s""" % (deviceName, outPath)
+    ffmpegCommand += """-video_size 1920x1080 -r 30 -filter_complex 'split=2[out1][out2]' -map '[out1]' -y -c:v h264_videotoolbox %s -map '[out2]' -s 1280x720 -f avi pipe:""" % outPath
     ffmpegCommand += " | "
     ffmpegCommand += """ffplay -vf \"drawtext=text=\'%{pts\\:gmtime\\:0\\:%M\\\\\\\\\\:%S}    %{eif\:t*60\:d}\':fontcolor=white:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5\" """
     ffmpegCommand += """ -x %i -left %i -top %i """ % (width, left, top)
