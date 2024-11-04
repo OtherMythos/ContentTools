@@ -8,6 +8,10 @@ for file in "$DIR"/*.mov; do
   # Check if the file exists (in case there are no .mov files)
   [ -e "$file" ] || continue
 
+  if [[ $file == *".reduced"* ]]; then
+    continue
+  fi
+
   # Define the output file name
   reduced_file="${file%.mov}.reduced.mov"
 
