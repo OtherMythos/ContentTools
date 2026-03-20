@@ -299,16 +299,20 @@ def _emit_title_clip(
             fontFace=face_str,
             fontColor=style.pastColour,
             backgroundColor=style.backgroundColour,
+            strokeColor=style.outlineColour,
+            strokeWidth=str(-style.outlineWidth) if style.outlineWidth else "0",
             alignment=style.alignment,
         )
 
     ddef_cur = ET.SubElement(title, "text-style-def", id=id_cur)
     ET.SubElement(ddef_cur, "text-style",
         font=style.font,
-        fontSize=str(style.fontSize),
+        fontSize=str(round(style.fontSize * style.highlightScale, 4)),
         fontFace=face_str,
         fontColor=style.highlightColour,
         backgroundColor=style.backgroundColour,
+        strokeColor=style.outlineColour,
+        strokeWidth=str(-style.outlineWidth) if style.outlineWidth else "0",
         alignment=style.alignment,
     )
 
@@ -320,6 +324,8 @@ def _emit_title_clip(
             fontFace=face_str,
             fontColor=style.futureColour,
             backgroundColor=style.backgroundColour,
+            strokeColor=style.outlineColour,
+            strokeWidth=str(-style.outlineWidth) if style.outlineWidth else "0",
             alignment=style.alignment,
         )
 
@@ -380,6 +386,8 @@ def _emit_caption_clip(
             fontFace=face_str,
             fontColor=style.pastColour,
             backgroundColor=style.backgroundColour,
+            strokeColor=style.outlineColour,
+            strokeWidth=str(-style.outlineWidth) if style.outlineWidth else "0",
         )
 
     ddef_cur = ET.SubElement(caption, "text-style-def", id=id_cur)
@@ -389,6 +397,8 @@ def _emit_caption_clip(
         fontFace=face_str,
         fontColor=style.highlightColour,
         backgroundColor=style.backgroundColour,
+        strokeColor=style.outlineColour,
+        strokeWidth=str(-style.outlineWidth) if style.outlineWidth else "0",
     )
 
     if future:
@@ -399,4 +409,6 @@ def _emit_caption_clip(
             fontFace=face_str,
             fontColor=style.futureColour,
             backgroundColor=style.backgroundColour,
+            strokeColor=style.outlineColour,
+            strokeWidth=str(-style.outlineWidth) if style.outlineWidth else "0",
         )

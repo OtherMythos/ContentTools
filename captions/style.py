@@ -17,10 +17,17 @@ class CaptionStyle:
 
     #colour of words already spoken (past) in the block - white
     pastColour: str = "1 1 1 1"
-    #colour of the currently active word - yellow
-    highlightColour: str = "1 0.85 0 1"
+    #colour of the currently active word - magenta
+    highlightColour: str = "0.5647 0.3059 1.0 1"
+    #font size multiplier for the active word (e.g. 1.2 = 20% bigger)
+    highlightScale: float = 1.0
     #colour of words not yet spoken (future) in the block - dim white
-    futureColour: str = "1 1 1 0.5"
+    futureColour: str = "1 1 1 0.9"
+
+    #text outline (stroke) — colour as RGBA string, width in points (0 = disabled).
+    #stored as positive; written as negative so Core Text renders fill AND stroke.
+    outlineColour: str = "0 0 0 1"
+    outlineWidth: float = 2.0
 
     #semi-transparent black pill behind each title
     backgroundColour: str = "0 0 0 0.8"
