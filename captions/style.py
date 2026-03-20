@@ -41,6 +41,9 @@ class CaptionStyle:
 
     #number of words per line before a line break is inserted
     wrapWords: int = 4
+    #max lines visible at once; words page in groups of (maxLines * wrapWords).
+    #0 = no limit
+    maxLines: int = 3
 
     #FCP Basic Title effect UID - discovered at runtime, this is the fallback path pattern
     #leave empty to force auto-discovery

@@ -225,8 +225,18 @@ def _build_text_runs(words: List[WordSegment], current_idx: int, style: CaptionS
     """
     Returns (past_text, sep_before_current, current_text, future_text).
     A newline is inserted every style.wrapWords words; all other separators are spaces.
+    Words are paged in windows of (maxLines * wrapWords); the window containing
+    current_idx is shown and indices are renormalised to that window.
     """
     wrap_every = style.wrapWords
+
+    #apply page-based windowing when maxLines is set
+    if style.maxLines > 0:
+        page_size = style.maxLines * wrap_every
+        page = current_idx // page_size
+        window_start = page * page_size
+        words = words[window_start: window_start + page_size]
+        current_idx = current_idx - window_start
 
     def sep(i: int) -> str:
         if i == 0:
