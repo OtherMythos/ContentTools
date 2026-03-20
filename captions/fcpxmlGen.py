@@ -155,10 +155,16 @@ def generate(
     )
 
     #emit one title element per word-reveal state per block
-    for block in blocks:
+    for b_idx, block in enumerate(blocks):
         if not block.words:
             continue
-        _emit_block(gap, block, style, tps, linger_seconds, fps, effect_id, project_format.height)
+        #cap linger so the last title of this block never overlaps the next block
+        next_block_start: Optional[float] = None
+        for nb in blocks[b_idx + 1:]:
+            if nb.words:
+                next_block_start = nb.words[0].start
+                break
+        _emit_block(gap, block, style, tps, linger_seconds, fps, effect_id, project_format.height, next_block_start)
 
     #---- library: event exposes the compound clip in the FCP browser ----
     library = ET.SubElement(root, "library")
@@ -201,6 +207,7 @@ def _emit_block(
     fps: float,
     effect_id: str,
     frame_height: int,
+    next_block_start: Optional[float] = None,
 ) -> None:
     words = block.words
     n = len(words)
@@ -213,7 +220,11 @@ def _emit_block(
         if i < n - 1:
             dur_secs = words[i + 1].start - word.start
         else:
-            dur_secs = word.end - word.start + linger_seconds
+            raw_end = word.end + linger_seconds
+            #cap so the last title ends no later than the next block's first word
+            if next_block_start is not None:
+                raw_end = min(raw_end, next_block_start)
+            dur_secs = raw_end - word.start
 
         #never produce zero/negative duration
         dur_secs = max(dur_secs, 1.0 / fps)

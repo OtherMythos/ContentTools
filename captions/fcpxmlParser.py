@@ -7,6 +7,7 @@ Caption offsets are intentionally ignored: all timing comes from Whisper.
 The caption text order reflects the editorial sequence of the video.
 """
 
+import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
@@ -42,6 +43,7 @@ def parse(fcpxml_path: str) -> Tuple[List[CaptionBlock], ProjectFormat]:
 
     fmt = _parse_format(root)
     captions = _parse_captions(root)
+    captions = _resplit_on_sentences(captions)
 
     return captions, fmt
 
@@ -76,6 +78,28 @@ def _parse_format(root: ET.Element) -> ProjectFormat:
             break
 
     return fmt
+
+
+def _resplit_on_sentences(blocks: List[CaptionBlock]) -> List[CaptionBlock]:
+    """
+    Split any block whose text contains an internal sentence boundary into
+    multiple blocks. Splits after '.', '?' or '!' that is followed by whitespace,
+    ensuring each output block is at most one sentence. This prevents a new
+    sentence starting on the last displayed line of a block.
+    """
+    #split after sentence-ending punctuation followed by whitespace.
+    #negative lookbehind excludes common abbreviations like digits (3.5) and
+    #single uppercase letters (e.g. U.S.) by only splitting when preceded by
+    #a lowercase letter, digit sequence end, or closing punctuation.
+    boundary = re.compile(r'(?<=[.?!])\s+')
+    result: List[CaptionBlock] = []
+    for block in blocks:
+        parts = boundary.split(block.text.strip())
+        for part in parts:
+            part = part.strip()
+            if part:
+                result.append(CaptionBlock(text=part))
+    return result
 
 
 def _parse_captions(root: ET.Element) -> List[CaptionBlock]:

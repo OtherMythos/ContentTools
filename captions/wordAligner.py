@@ -108,7 +108,34 @@ def align(
             f"[align] Block '{block.text[:40]}...' → NO MATCH"
         )
 
+    _fix_sentence_spill(aligned)
     return aligned
+
+
+_SENTENCE_END = re.compile(r'[.?!]["\']?$')
+
+
+def _fix_sentence_spill(blocks: List[AlignedBlock]) -> None:
+    """
+    After alignment the greedy matcher sometimes absorbs the first word(s) of
+    the next sentence into the current block. Detect this by finding the last
+    sentence-end word in each block: any words that follow it belong to the
+    next block and are moved there.
+    """
+    for i in range(len(blocks) - 1):
+        words = blocks[i].words
+        if not words:
+            continue
+        #find the rightmost sentence-ending word in this block
+        last_end = -1
+        for j, w in enumerate(words):
+            if _SENTENCE_END.search(w.word.strip()):
+                last_end = j
+        #if the sentence ended before the last word, the remainder is spillover
+        if 0 <= last_end < len(words) - 1:
+            spill = words[last_end + 1:]
+            blocks[i].words = words[:last_end + 1]
+            blocks[i + 1].words = spill + blocks[i + 1].words
 
 
 def fallback_group(
